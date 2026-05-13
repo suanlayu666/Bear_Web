@@ -10,7 +10,7 @@ const CONFIG = {
     BEAR_X: 100,
     BEAR_W: 70,
     BEAR_H: 70,
-    GRAVITY: 1800,
+    GRAVITY: 1550,
     JUMP_VELOCITY: -960,
     INITIAL_SPEED: 120,
     MAX_HEALTH: 3,
@@ -19,15 +19,15 @@ const CONFIG = {
     SHAKE_S: 0.15,
     SHAKE_INTENSITY: 8,
     DODGE_STREAK_FOR_HEAL: 5,
-    SPEED_INCREASE_PER_S: 18,
+    SPEED_INCREASE_PER_S: 12,
     SPEED_INCREASE_INTERVAL: 10,
-    SPAWN_INTERVAL_INITIAL: 2.2,
-    SPAWN_INTERVAL_MIN: 0.85,
-    SPAWN_INTERVAL_DECREASE: 0.12,
-    SPAWN_INTERVAL_DECREASE_EVERY: 6,
+    SPAWN_INTERVAL_INITIAL: 2.5,
+    SPAWN_INTERVAL_MIN: 1.15,
+    SPAWN_INTERVAL_DECREASE: 0.08,
+    SPAWN_INTERVAL_DECREASE_EVERY: 8,
     MOLE_SPAWN_INTERVAL: 4.5,
     COFFEE_SPAWN_INTERVAL: 5.5,
-    DOUBLE_SPAWN_CHANCE: 0.15,
+    DOUBLE_SPAWN_CHANCE: 0.10,
     FLYING_OBSTACLE_CHANCE: 0.25,
     OBSTACLE_Y_GROUND: 312,
     OBSTACLE_Y_FLYING_MIN: 200,
@@ -704,12 +704,20 @@ function spawnFlyingObstacle() {
 }
 
 function spawnObstacle() {
+    // Dynamic gap guard: don't spawn if an obstacle is too close to the right edge.
+    // Minimum gap = time for one full jump (~1.07s) * current speed
+    const minGapPx = state.gameSpeed * 1.15;
+    for (const obs of obstacles) {
+        if (obs.x > CONFIG.WIDTH - minGapPx) return;
+    }
+
     if (Math.random() < CONFIG.FLYING_OBSTACLE_CHANCE) {
         spawnFlyingObstacle();
     } else {
         spawnGroundObstacle();
     }
 
+    // Double spawn only when safe — skip if the first spawn already triggered the gap guard
     if (Math.random() < CONFIG.DOUBLE_SPAWN_CHANCE) {
         if (Math.random() < 0.5) {
             spawnGroundObstacle();
